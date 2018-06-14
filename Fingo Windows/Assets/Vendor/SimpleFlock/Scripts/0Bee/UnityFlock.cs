@@ -32,48 +32,76 @@ public class UnityFlock : MonoBehaviour
 
 
     //控制单个个体运动的属性：父对象即头鸟，速度，归一化速度，随机推力，父对象的推力。。。
-    private Transform origin;
+    public Transform origin;
     private Vector3 velocity;
     private Vector3 normalizedVelicity;
     private Vector3 randomPush;
     private Vector3 originPush;
-    private Transform[] objects;
-    private UnityFlock[] otherFlocks;//其他个体集合
+    public Transform[] objects;
+    public UnityFlock[] otherFlocks;//其他个体集合
     private Transform transformCompont;
 
+    public SwarmTravelController travelOrigin;
+
+    // there is a fixed number of bees 
+    // allocate all swarm arrays for the max number of bees
 
 
-	// Use this for initialization
-	void Start ()
-	{
-	    randomFreq = 1.0f/randomFreq;//获取随机变化的频率
+    // Use this for initialization
+    void Start()
+    {
+        travelOrigin = null;
+
+        randomFreq = 1.0f / randomFreq;//获取随机变化的频率
         //设置父节点为origin
         origin = transform.parent;
 
-	    transformCompont = transform;
+        transformCompont = transform;
 
         //临时组件数组
-	    Component[] tempFlocks = null;
+        Component[] tempFlocks = null;
 
-	    if (transform.parent)
-	    {
-	        tempFlocks = transform.parent.GetComponentsInChildren<UnityFlock>();
-	    }
+        if (transform.parent)
+        {
+            tempFlocks = transform.parent.GetComponentsInChildren<UnityFlock>();
+        }
 
-        objects=new Transform[tempFlocks.Length];
-        otherFlocks=new UnityFlock[tempFlocks.Length];
+        //   objects=new Transform[tempFlocks.Length];
+        //   otherFlocks=new UnityFlock[tempFlocks.Length];
 
-        //将群体的位置信息和群体加载到数组
-	    for (int i = 0; i < tempFlocks.Length; i++)
-	    {
-	        objects[i] = tempFlocks[i].transform;
-	        otherFlocks[i] = (UnityFlock)tempFlocks[i];
-	    }
+        //   //将群体的位置信息和群体加载到数组
+        //for (int i = 0; i < tempFlocks.Length; i++)
+        //{
+        //    objects[i] = tempFlocks[i].transform;
+        //    otherFlocks[i] = (UnityFlock)tempFlocks[i];
+        //}
 
-	    transform.parent = null;
+        int maxBees = 4;
+
+        travelOrigin = transform.parent.GetComponent<SwarmTravelController>();
+
+        for (int i = 0; i < tempFlocks.Length; i++)
+        {
+            travelOrigin.RegisterFlock((UnityFlock)tempFlocks[i]);
+        }
+
+
+            
+
+            // parent to root level in game world
+            transform.parent = GameObject.Find("GameWorld").transform;
 
 	    StartCoroutine(UpdateRandom());
 	}
+
+
+    void UpdateFlockParent(Transform newOrigin)
+    {
+        origin = newOrigin;
+
+
+    }
+
 
     //基于randomFreq的频率来更新randompush的频率
     IEnumerator UpdateRandom()
@@ -99,9 +127,10 @@ public class UnityFlock : MonoBehaviour
         Vector3 toAvg;
         Vector3 wantedVel;
 
-        for (int i = 0; i < objects.Length; i++)
+        //for (int i = 0; i < objects.Length; i++)
+        foreach (Transform transform in travelOrigin.flockTransforms)
         {
-            Transform transform = objects[i];
+            //Transform transform = objects[i];
             if (transform != transformCompont)
             {
                 Vector3 otherPositon = transform.position;
@@ -131,7 +160,8 @@ public class UnityFlock : MonoBehaviour
 
                 //保持与头儿的距离
                 f = d/followRadius;
-                UnityFlock otherSealgull = otherFlocks[i];
+                //UnityFlock otherSealgull = otherFlocks[i];
+                UnityFlock otherSealgull = transform.GetComponent<UnityFlock>();
 
                 //标准化otherSealgul的速度来获取移动的方向，接下来设置一个新的速度
                 avgVelocity += otherSealgull.normalizedVelicity * f *followVelocity;
