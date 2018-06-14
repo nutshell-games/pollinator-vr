@@ -29,15 +29,18 @@ public class TreeLifecycleController : MonoBehaviour {
 		
 	}
 
-    public void ResetTree()
+    public void ResetLifecycle()
     {
         isPollinated = false;
 
+        flowerCtrl.HideAllFlowers();
+        fruitCtrl.HideAllFruit();
     }
 
     public void ShowFlowers()
     {
         // foreach flower, trigger show flower animation
+        flowerCtrl.BlossomAllFlowers();
     }
 
     public void GrowFruit(int fruitCount)

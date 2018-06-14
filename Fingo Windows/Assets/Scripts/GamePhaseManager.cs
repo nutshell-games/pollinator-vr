@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 
 // why this game:
@@ -50,12 +51,30 @@ public class GamePhaseManager : MonoBehaviour {
     public CustomTimer timerDancePhase;
     public CustomTimer timerCollectionPhase;
 
+    public Transform UIWorkerCount;
+    public Transform UIPollenCount;
+    public Transform UIFruitCount;
+
+    public Transform worldTargetingSystem;
+    public Transform cameraTargetingSystem;
+
+    public UnityEvent OnStartSurveyPhase;
+    public UnityEvent OnStartDancePhase;
+    public UnityEvent OnStartCollectionPhase;
+    public UnityEvent OnStartScoringPhase;
+
     public int scoreFruit;
     public float scorePollen;
 
+
     // Use this for initialization
     void Start () {
-		
+        if (OnStartSurveyPhase == null) OnStartSurveyPhase = new UnityEvent();
+        if (OnStartDancePhase == null) OnStartDancePhase = new UnityEvent();
+        if (OnStartCollectionPhase == null) OnStartCollectionPhase = new UnityEvent();
+        if (OnStartScoringPhase == null) OnStartScoringPhase = new UnityEvent();
+
+        ResetTimers();
 	}
 	
 	// Update is called once per frame
@@ -101,41 +120,77 @@ public class GamePhaseManager : MonoBehaviour {
     public void StartGame()
     {
         timerStartPhase.gameObject.SetActive(true);
+
         timerStartPhase.duration = durationStartPhase;
+        timerSurveyPhase.duration = durationSurveyPhase;
+        timerDancePhase.duration = durationDancePhase;
+        timerCollectionPhase.duration = durationCollectionPhase;
+
         timerStartPhase.StartTimer();
     }
 
     public void StartSurveyPhase()
     {
         timerStartPhase.gameObject.SetActive(false);
-        timerSurveyPhase.duration = durationSurveyPhase;
+
+        OnStartSurveyPhase.Invoke();
+
+        
         timerSurveyPhase.StartTimer();
     }
 
     public void StartDancePhase()
     {
-        timerDancePhase.duration = durationDancePhase;
+        OnStartDancePhase.Invoke();
+
+        // enable camera targeting system
+        // enable world targeting system
+        worldTargetingSystem.gameObject.SetActive(true);
+        cameraTargetingSystem.gameObject.SetActive(true);
+
+        
         timerDancePhase.StartTimer();
     }
 
     public void StartCollectionPhase()
     {
-        timerCollectionPhase.duration = durationCollectionPhase;
+        OnStartCollectionPhase.Invoke();
+
+        // disble camera targeting system
+        // disble world targeting system
+        worldTargetingSystem.gameObject.SetActive(false);
+        cameraTargetingSystem.gameObject.SetActive(false);
+
+        
         timerCollectionPhase.StartTimer();
     }
 
     public void StartScoringPhase()
     {
         // score nectar and apricots by each tree
+        UIFruitCount.gameObject.SetActive(true);
+        UIPollenCount.gameObject.SetActive(true);
+
+        OnStartScoringPhase.Invoke();
     }
 
     public void ResetTimers()
     {
-        timerStartPhase.gameObject.SetActive(false);
+        worldTargetingSystem.gameObject.SetActive(false);
+        cameraTargetingSystem.gameObject.SetActive(false);
+
+        timerStartPhase.duration = durationStartPhase;
+        timerSurveyPhase.duration = durationSurveyPhase;
+        timerDancePhase.duration = durationDancePhase;
+        timerCollectionPhase.duration = durationCollectionPhase;
 
         timerStartPhase.ResetTimer();
         timerSurveyPhase.ResetTimer();
         timerDancePhase.ResetTimer();
         timerCollectionPhase.ResetTimer();
+
+        timerStartPhase.gameObject.SetActive(false);
+        UIFruitCount.gameObject.SetActive(false);
+        UIPollenCount.gameObject.SetActive(false);
     }
 }

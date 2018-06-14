@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class SwarmManager : MonoBehaviour {
 
@@ -14,12 +15,21 @@ public class SwarmManager : MonoBehaviour {
     public SwarmTravelController originSwarm;
     public SwarmTravelController destinationSwarm;
 
+    [System.Serializable]
+    public class UnityEventInt:UnityEvent<int> { };
+    [SerializeField]
+    public UnityEventInt OnHomeWorkerCountChange;
+
     // Use this for initialization
     void Start()
     {
         //RegisterSwarms();
         //originSwarm = swarmControllers[0];
         //destinationSwarm = swarmControllers[1];
+
+        if (OnHomeWorkerCountChange == null) OnHomeWorkerCountChange = new UnityEventInt();
+
+        ReturnAllFlocksToHive();
     }
     
     void SetupTestScenario()
@@ -55,7 +65,7 @@ public class SwarmManager : MonoBehaviour {
         }
     }
 
-    void ReturnAllFlocksToHive()
+    public void ReturnAllFlocksToHive()
     {
         foreach (SwarmTravelController swarmCtrl in swarmControllers)
         {
@@ -65,16 +75,17 @@ public class SwarmManager : MonoBehaviour {
         }
     }
 
-    void ReturnAllFlocksInSwarmToHive(SwarmTravelController swarmCtrl)
+    public void ReturnAllFlocksInSwarmToHive(SwarmTravelController swarmCtrl)
     {
         while (swarmCtrl.flockBehaviors.Count > 0)
         {
             ReturnFlockInSwarmToHive(swarmCtrl);
         }
 
+        OnHomeWorkerCountChange.Invoke(originSwarm.flockBehaviors.Count);
     }
 
-    void ReturnFlockInSwarmToHive(SwarmTravelController swarmCtrl)
+    public void ReturnFlockInSwarmToHive(SwarmTravelController swarmCtrl)
     {
         UnityFlock flock = swarmCtrl.UnregisterRandomFlock();
 
@@ -145,10 +156,15 @@ public class SwarmManager : MonoBehaviour {
         print("swarms count:" + swarmControllers.Count);
 
         UnityFlock flock = originSwarm.UnregisterRandomFlock();
+
+        if (flock == null) return;
+
         destinationSwarm.RegisterFlock(flock);
 
         print("flock A:" + originSwarm.flockTransforms.Count.ToString());
         print("flock B:" + destinationSwarm.flockTransforms.Count.ToString());
+
+        OnHomeWorkerCountChange.Invoke(originSwarm.flockBehaviors.Count);
     }
 
     // all flocks have referenced each other 

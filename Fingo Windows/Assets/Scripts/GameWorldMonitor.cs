@@ -1,11 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameWorldMonitor : MonoBehaviour {
 
+    public TextMesh labelPollenCount;
+    public TextMesh labelFruitCount;
+    public TextMesh labelWorkerCount;
+
     [SerializeField]
     List<SwarmNodeController> swarmNodeCtrls;
+    List<TreeLifecycleController> treeCtrls;
 
     // LIVE INSTANCE VARIABLES:
     [SerializeField]
@@ -44,6 +50,31 @@ public class GameWorldMonitor : MonoBehaviour {
             swarmNodeCtrls.Add(querySwarmNodeCtrls[i]);
         }
 
+        treeCtrls = new List<TreeLifecycleController>();
+
+        TreeLifecycleController[] queryTreeCtrls = gameObject.GetComponentsInChildren<TreeLifecycleController>();
+        for (int i = 0; i < queryTreeCtrls.Length; i++)
+        {
+            treeCtrls.Add(queryTreeCtrls[i]);
+        }
+
+        ResetCounts();
+    }
+
+    public void ShowAllFlowers()
+    {
+        foreach (TreeLifecycleController treeCtrl in treeCtrls)
+        {
+            treeCtrl.ShowFlowers();
+        }
+    }
+
+    public void ResetTreeLifecycles()
+    {
+        foreach (TreeLifecycleController treeCtrl in treeCtrls)
+        {
+            treeCtrl.ResetLifecycle();
+        }
     }
 
     public void CalculateSwarmGlobalEffect()
@@ -74,6 +105,26 @@ public class GameWorldMonitor : MonoBehaviour {
 
         Debug.Log("CalculateSwarmGlobalEffect totalFlowersPollinated: " + totalFlowersPollinated);
         Debug.Log("CalculateSwarmGlobalEffect totalResourcesCollectedDuringSample: " + totalResourcesCollectedDuringSample);
+
+        UpdateScore();
+    }
+
+    public void ResetCounts()
+    {
+        labelPollenCount.text = 0.ToString();
+        labelFruitCount.text = 0.ToString();
+    }
+
+    public void UpdateWorkerCount(int currentWorkerCount)
+    {
+        numberWorkers = currentWorkerCount;
+        labelWorkerCount.text = numberWorkers.ToString();
+    }
+
+    public void UpdateScore()
+    {
+        labelPollenCount.text = totalResourcesCollectedDuringSample.ToString();
+        labelFruitCount.text = totalFlowersPollinated.ToString();
     }
 	
 	// Update is called once per frame
@@ -82,5 +133,9 @@ public class GameWorldMonitor : MonoBehaviour {
         {
             CalculateSwarmGlobalEffect();
         }
-	}
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ResetTreeLifecycles();
+        }
+    }
 }
