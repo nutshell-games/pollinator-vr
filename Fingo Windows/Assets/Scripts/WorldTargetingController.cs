@@ -24,12 +24,11 @@ public class WorldTargetingController : MonoBehaviour {
     public bool isTargetLocked;
     public bool isAcquiringTarget;
 
+    public bool isControlEnabled;
+
     float[] targetingDirections = { -55.0f, -37.2f, -28.7f, -22.6f, -13.3f, -7.7f, 4.06f, 11.5f, 19.3f, 28.6f, 45.9f };
 
-    private void OnEnable()
-    {
 
-    }
 
     public void SwitchTargetRange(int range)
     {
@@ -56,6 +55,8 @@ public class WorldTargetingController : MonoBehaviour {
 
     public void ActivateTargeting()
     {
+        isControlEnabled = true;
+
         arrowIndicator.hideIndicator = false;
         //arrowIndicator.updateArrowMesh();
     }
@@ -63,6 +64,8 @@ public class WorldTargetingController : MonoBehaviour {
 
     public void DeactivateTargeting()
     {
+        isControlEnabled = false;
+
         arrowIndicator.hideIndicator = true;
         //arrowIndicator.updateArrowMesh();
     }
@@ -74,25 +77,45 @@ public class WorldTargetingController : MonoBehaviour {
         currentTarget = swarmTarget;
         //currentTarget.position = new Vector3(swarmTarget.position.x, swarmTarget.position.y, swarmTarget.position.z);
 
+        targetDetector.position = new Vector3(currentTarget.position.x, targetDetector.position.y, currentTarget.position.z);
 
+    }
 
+    public void ResetTargeting()
+    {
+        // SET TAREGETING STRAIGHT AHEAD, CENTER
+        isTargetLocked = false;
+        SwitchTargetRange(1);
+        SetTargetingDirection(0);
     }
 
 	// Use this for initialization
 	void Start () {
         ActivateTargeting();
-
-        
-
-        SwitchTargetRange(1);
-
-        currentDirectionIndex = 0;
-        currentRangeIndex = 1;
     }
 
-    public void SetTargetingDirection(int directionIndex)
+    private void OnEnable()
     {
-        Debug.Log("SetTargetingDirection "+directionIndex.ToString());
+        ResetTargeting();
+    }
+
+    public void SetTargetingDirection(float directionAngle)
+    {
+        if (!isTargetLocked)
+        {
+            Debug.Log("SetTargetingDirection " + directionAngle.ToString());
+
+            //targetingVector.localRotation = new Quaternion(targetingVector.localRotation.x, targetingDirections[directionIndex], targetingVector.localRotation.z, targetingVector.localRotation.w);
+            //targetingVector.rotation = new Quaternion(targetingVector.rotation.x, targetingDirections[directionIndex], targetingVector.rotation.z, targetingVector.rotation.w);
+            targetingVector.eulerAngles = new Vector3(0, directionAngle, 0);
+        }
+
+        
+    }
+
+    public void SwitchTargetingDirection(int directionIndex)
+    {
+        Debug.Log("SwitchTargetingDirection " + directionIndex.ToString());
 
         //targetingVector.localRotation = new Quaternion(targetingVector.localRotation.x, targetingDirections[directionIndex], targetingVector.localRotation.z, targetingVector.localRotation.w);
         //targetingVector.rotation = new Quaternion(targetingVector.rotation.x, targetingDirections[directionIndex], targetingVector.rotation.z, targetingVector.rotation.w);
@@ -103,6 +126,8 @@ public class WorldTargetingController : MonoBehaviour {
     // DEBUG CONTROLS FOR PC
     void KeyboardTargetingDirection()
     {
+        if (!isControlEnabled) return;
+
         if (Input.GetKeyUp(KeyCode.LeftArrow))
         {
             Debug.Log("KeyboardTargetingDirection Left");
@@ -113,7 +138,7 @@ public class WorldTargetingController : MonoBehaviour {
 
             }
 
-            SetTargetingDirection(currentDirectionIndex);
+            SwitchTargetingDirection(currentDirectionIndex);
         }
         if (Input.GetKeyUp(KeyCode.RightArrow))
         {
@@ -126,7 +151,7 @@ public class WorldTargetingController : MonoBehaviour {
 
             }
 
-            SetTargetingDirection(currentDirectionIndex);
+            SwitchTargetingDirection(currentDirectionIndex);
         }
 
         if (Input.GetKeyUp(KeyCode.UpArrow))

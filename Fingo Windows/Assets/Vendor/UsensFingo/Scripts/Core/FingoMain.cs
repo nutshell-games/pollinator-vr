@@ -34,11 +34,11 @@ namespace Fingo
         [SerializeField]
         private bool enableGestureDetection = true;
         [SerializeField]
-        private bool enableInfraredImage = true;
+        private bool enableInfraredImage = false;
         [SerializeField]
         private bool enableColorImage = false;
         [SerializeField]
-        private bool enableHeadTracking = false;
+        private bool enableHeadTracking = true;
 
         void Awake()
         {

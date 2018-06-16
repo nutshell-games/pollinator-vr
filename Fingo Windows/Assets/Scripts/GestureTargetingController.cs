@@ -15,6 +15,10 @@ public class GestureTargetingController : MonoBehaviour {
     public Transform targetQualityNode;
     public Transform targetingVectorNode;
 
+    public Transform headTrackingTarget;
+    public Transform targetSeekingIndicator;
+    public Transform targetLockIndicator;
+
     public float targetNodeMinimumY;
     public float targetNodeMaximumY;
 
@@ -50,22 +54,38 @@ public class GestureTargetingController : MonoBehaviour {
 
     private void OnEnable()
     {
-        if (OnSendFlockEvent == null)
-        {
-            OnSendFlockEvent = new UnityEvent();
-        }
-        if (OnResetGameEvent == null)
-        {
-            OnResetGameEvent = new UnityEvent();
-        }
+        //if (OnSendFlockEvent == null)
+        //{
+        //    OnSendFlockEvent = new UnityEvent();
+        //}
+        //if (OnResetGameEvent == null)
+        //{
+        //    OnResetGameEvent = new UnityEvent();
+        //}
+
+        controlMode = ControlMode.TargetingMode;
+        isCalibrating = false;
+        isTargetLocked = false;
+    }
+
+    void CalibrateHeadTracking()
+    {
+        FingoManager.Instance.SetHeadTrackingEnable(true);
+
+        // Capability Report
+        bool hasCapabilityMarker = FingoMain.Instance.GetDevicesEnable(FingoCapability.Marker);
+        bool hasCapabilitySlam = FingoMain.Instance.GetDevicesEnable(FingoCapability.Slam);
+
+        FingoMain.Instance.ResetHeadTracking();
+        headTracked = FingoMain.Instance.GetHead();
+
+        Debug.Log("FINGO CAPABILITY REPORT: hasCapabilityMarker " + hasCapabilityMarker);
+        Debug.Log("FINGO CAPABILITY REPORT: hasCapabilitySlam " + hasCapabilitySlam);
+        Debug.Log("FINGO CAPABILITY REPORT: headTracked " + headTracked);
     }
 
     // Use this for initialization
-    void Start () {
-
-        headTracked = FingoMain.Instance.GetHead();
-        controlMode = ControlMode.TargetingMode;
-        isCalibrating = false;
+    void Start () {  
 
         // TODO reset following values in calibration mode
         // limits defined with Fingo sensor at ~45 deg down mount angle, with headband mount
@@ -85,12 +105,13 @@ public class GestureTargetingController : MonoBehaviour {
         clampedTargetingYrange = Mathf.Abs(targetNodeMaximumY - targetNodeMinimumY);
 
     }
+
+
 	
 	// Update is called once per frame
 	void Update () {
 
-        setTargetVectorRotation();
-
+        
         Fingo.Hand handLeft = FingoMain.Instance.GetHand(Fingo.HandType.Left);
         Fingo.Hand handRight = FingoMain.Instance.GetHand(Fingo.HandType.Right);
 
@@ -99,6 +120,14 @@ public class GestureTargetingController : MonoBehaviour {
 
         isRightHandWithinCaptureBounds = isDetectedRight;
         isLeftHandWithinCaptureBounds = isDetectedLeft;
+
+
+        // setTargetVectorRotation();
+
+        if (isRightHandWithinCaptureBounds && isLeftHandWithinCaptureBounds)
+        {
+           
+        }
 
         if (isRightHandWithinCaptureBounds)
         {
@@ -110,11 +139,12 @@ public class GestureTargetingController : MonoBehaviour {
             updateHandNodePosition(handNodeLeft, handModelLeft);
         }
         
-
         if (!isTargetLocked && controlMode==ControlMode.TargetingMode)
         {
             updateTargetNodePosition();
         }
+
+        // FIRE THE BEES!!!
 
         if (isTargetLocked && controlMode==ControlMode.CommandMode)
         {
@@ -125,18 +155,25 @@ public class GestureTargetingController : MonoBehaviour {
 
     void setTargetVectorRotation()
     {
-
         
 
-        if (headTracked != null)
+        if (!isTargetLocked)
         {
-            Debug.Log("stvr setTargetVectorRotation");
-
-            Quaternion headRotation = headTracked.GetRotation();
-            Debug.Log("stvr: head position:" + headRotation.ToString());
-
-            targetingVectorNode.localRotation = new Quaternion(targetingVectorNode.localRotation.x, headRotation.y, targetingVectorNode.localRotation.z, targetingVectorNode.localRotation.z);
+            targetingVectorNode.localRotation = new Quaternion(targetingVectorNode.localRotation.x, headTrackingTarget.localRotation.y, targetingVectorNode.localRotation.z, targetingVectorNode.localRotation.z);
         }
+
+        Debug.Log("stvr setTargetVectorRotation");
+        Debug.Log(transform.localRotation.ToString());
+
+        //if (headTracked != null)
+        //{
+        //    Debug.Log("stvr setTargetVectorRotation");
+
+        //    Quaternion headRotation = headTracked.GetRotation();
+        //    Debug.Log("stvr: head position:" + headRotation.ToString());
+
+        //    targetingVectorNode.localRotation = new Quaternion(targetingVectorNode.localRotation.x, headRotation.y, targetingVectorNode.localRotation.z, targetingVectorNode.localRotation.z);
+        //}
     }
 
     void updateHandNodePosition(Transform handNode, Transform handModel)
@@ -146,6 +183,32 @@ public class GestureTargetingController : MonoBehaviour {
         // TODO adjust position of hand node for more visually accurate anchoring of target node between hands
     }
 
+    void updateTargetNodePosition()
+    {
+        targetNode.position = new Vector3(targetNode.position.x, referenceYvalue, targetNode.position.z);
+
+        //targetNode.position = new Vector3((handNodeLeft.position.x + handNodeRight.position.x) / 2, (handNodeLeft.position.y + handNodeRight.position.y) / 2, (handNodeLeft.position.z + handNodeRight.position.z) / 2);
+
+        // limit movement to Y axis
+        referenceYvalue = (handNodeLeft.position.y + handNodeRight.position.y) / 2;
+
+        //if (referenceYvalue > targetNodeMinimumY && referenceYvalue < targetNodeMaximumY)
+        //{
+        //    targetNode.position = new Vector3(targetNode.position.x, referenceYvalue, targetNode.position.z);
+
+        //    updateTargetingYvalue(referenceYvalue);
+        //}
+
+    }
+
+    void updateTargetingYvalue(float clampedYvalue)
+    {
+        clampedTargetingYvalue = Mathf.Abs(clampedYvalue - targetNodeMinimumY);
+
+        percentageYvalue = clampedTargetingYvalue / clampedTargetingYrange;
+    }
+
+    // UTILITIES:
     // https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
     float getMagnitudeVectorBetweenNodes(Transform origin, Transform target)
     {
@@ -158,32 +221,7 @@ public class GestureTargetingController : MonoBehaviour {
         //}
 
         return distance;
-    }
-
-
-    void updateTargetNodePosition()
-    {
-
-        //targetNode.position = new Vector3((handNodeLeft.position.x + handNodeRight.position.x) / 2, (handNodeLeft.position.y + handNodeRight.position.y) / 2, (handNodeLeft.position.z + handNodeRight.position.z) / 2);
-        // limit movement to Y axis
-        referenceYvalue = (handNodeLeft.position.y + handNodeRight.position.y) / 2;
-
-        if (referenceYvalue > targetNodeMinimumY && referenceYvalue < targetNodeMaximumY)
-        {
-            targetNode.position = new Vector3(targetNode.position.x, referenceYvalue, targetNode.position.z);
-
-            updateTargetingYvalue(referenceYvalue);
-        }
-
-        
-    }
-
-    void updateTargetingYvalue(float clampedYvalue)
-    {
-        clampedTargetingYvalue = Mathf.Abs(clampedYvalue - targetNodeMinimumY);
-
-        percentageYvalue = clampedTargetingYvalue / clampedTargetingYrange;
-    }
+    }    
 
     Vector3 getNormalizedVectorBetweenNodes(Transform origin, Transform target)
     {
@@ -268,16 +306,27 @@ public class GestureTargetingController : MonoBehaviour {
 
     public void lockTargetNode()
     {
-        isTargetLocked = true;
-
-        Debug.Log("lockTargetNode");
+        if (!isTargetLocked)
+        {
+            isTargetLocked = true;
+            targetLockIndicator.gameObject.SetActive(isTargetLocked);
+            targetSeekingIndicator.gameObject.SetActive(!isTargetLocked);
+            Debug.Log("lockTargetNode");
+        }
     }
 
     public void releaseTargetNode()
     {
-        isTargetLocked = false;
+        if (isTargetLocked)
+        {
+            isTargetLocked = false;
+            targetLockIndicator.gameObject.SetActive(isTargetLocked);
+            targetSeekingIndicator.gameObject.SetActive(!isTargetLocked);
+            exitCommandMode();
 
-        Debug.Log("releaseTargetNode");
+            Debug.Log("releaseTargetNode");
+        }
+        
     }
 
     public void enterCommandMode()

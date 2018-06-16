@@ -34,11 +34,40 @@ public class GestureDetectionController : MonoBehaviour
     public UnityEvent OnRightHandFistGesture;
     public UnityEvent OnLeftHandFistGesture;
 
+    public UnityEvent OnRightHandThumbsUpGesture;
+    public UnityEvent OnLeftHandThumbsUpGesture;
+
+    public UnityEvent OnRightHandPalmGesture;
+    public UnityEvent OnLeftHandPalmGesture;
+
+    public UnityEvent OnRightHandPointGesture;
+    public UnityEvent OnLeftHandPointGesture;
+
+    public UnityEvent OnRightHandShootEmGesture;
+    public UnityEvent OnLeftHandShootEmGesture;
+
+    public UnityEvent OnRightHandCoverEyeGesture;
+    public UnityEvent OnLeftHandCoverEyeGesture;
+
+    public UnityEvent OnRightHandPinkyGesture;
+    public UnityEvent OnLeftHandPinkyGesture;
+
+    public UnityEvent OnRightHandHornsGesture;
+    public UnityEvent OnLeftHandHornsGesture;
+
+    public UnityEvent OnRightHandCallMeGesture;
+    public UnityEvent OnLeftHandCallMeGesture;
+
     public UnityEvent OnClearRight;
     public UnityEvent OnClearLeft;
 
+    //public UnityEvent OnRightHandGesture;
+    //public UnityEvent OnLeftHandGesture;
+
     void OnEnable()
     {
+        GestureManager.GestureEvent += ColorChange;
+
         if (OnRightHandOkayGesture == null)
         {
             OnRightHandOkayGesture = new UnityEvent();
@@ -72,13 +101,19 @@ public class GestureDetectionController : MonoBehaviour
             OnClearLeft = new UnityEvent();
         }
 
-        GestureManager.GestureEvent += ColorChange;
+       
     }
 
     public void ColorChange(HandType handType, GestureName gestureType)
     {
+        //Debug.Log("On GestureEvent handType: "+handType);
+        //Debug.Log("On GestureEvent gestureType: " + gestureType);
+
         if (handType == HandType.Right)
         {
+            //OnRightHandGesture.Invoke();
+            //OnLeftHandGesture.Invoke();
+
             switch (gestureType)
             {
                 case GestureName.Okay:
@@ -90,6 +125,39 @@ public class GestureDetectionController : MonoBehaviour
                 case GestureName.Fist:
                     OnRightHandFistGesture.Invoke();
                     break;
+
+                case GestureName.ThumbsUp:
+                    OnRightHandThumbsUpGesture.Invoke();
+                    break;
+
+                case GestureName.Palm:
+                    OnRightHandPalmGesture.Invoke();
+                    break;
+
+                case GestureName.Point:
+                    OnRightHandPointGesture.Invoke();
+                    break;
+
+                case GestureName.ShootEm:
+                    OnRightHandShootEmGesture.Invoke();
+                    break;
+
+                case GestureName.CoverEye:
+                    OnRightHandCoverEyeGesture.Invoke();
+                    break;
+
+                case GestureName.Pinky:
+                    OnRightHandPinkyGesture.Invoke();
+                    break;
+
+                case GestureName.Horns:
+                    OnRightHandHornsGesture.Invoke();
+                    break;
+
+                case GestureName.CallMe:
+                    OnRightHandCallMeGesture.Invoke();
+                    break;
+
                 default: // Gesture.None or any other gesture
                     OnClearRight.Invoke();
                     break;
@@ -107,6 +175,38 @@ public class GestureDetectionController : MonoBehaviour
                     break;
                 case GestureName.Fist:
                     OnLeftHandFistGesture.Invoke();
+                    break;
+
+                case GestureName.ThumbsUp:
+                    OnLeftHandThumbsUpGesture.Invoke();
+                    break;
+
+                case GestureName.Palm:
+                    OnLeftHandPalmGesture.Invoke();
+                    break;
+
+                case GestureName.Point:
+                    OnLeftHandPointGesture.Invoke();
+                    break;
+
+                case GestureName.ShootEm:
+                    OnLeftHandShootEmGesture.Invoke();
+                    break;
+
+                case GestureName.CoverEye:
+                    OnLeftHandCoverEyeGesture.Invoke();
+                    break;
+
+                case GestureName.Pinky:
+                    OnLeftHandPinkyGesture.Invoke();
+                    break;
+
+                case GestureName.Horns:
+                    OnLeftHandHornsGesture.Invoke();
+                    break;
+
+                case GestureName.CallMe:
+                    OnLeftHandCallMeGesture.Invoke();
                     break;
                 default: // Gesture.None or any other gesture
                     OnClearLeft.Invoke();
